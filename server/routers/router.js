@@ -1,6 +1,5 @@
-
 const express = require("express");
-console.log("enter into the router");
+
 const bodyParser = require("body-parser");
 const jsonParser = bodyParser.json({ limit: "450mb" });
 const axios = require("axios");
@@ -13,6 +12,5 @@ router.use(upload.any(), jsonParser, (req, res, next) => {
   return next();
 });
 require("./login.router")(router);
-
 
 module.exports = router;

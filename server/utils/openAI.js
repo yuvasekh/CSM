@@ -1,36 +1,49 @@
+const axios = require("axios");
 async function azureopenai(filecontent) {
-  let finaldata = {
+  console.log(filecontent["1"], "check");
+
+  let data1 = JSON.stringify({
     messages: [
       {
         role: "system",
-        content: `You are a helpful assistant. User will give you a data, in that data user mentioned  Your role is to prepare question based on filecontent and generate approprite,
-        And to verify is it ended with proper explantions or answers or not. The inputed data may a commucation between customer and
-         agent regarding an issue.
-        `,
+        content: `Generate a series of meaningful questions based on the provided user resume. Your questions should cover different sections of the resume, such as skills, experiences, and education. Aim to craft questions that delve into specific details mentioned in the resume and would prompt insightful responses from the user.
+
+        Note: Your questions should be tailored to the content of the user's resume 
+        
+        Response Format: Provide the questions as an array`,
       },
       {
         role: "user",
-        content: filecontent,
+        content: filecontent["1"],
       },
     ],
-  };
+  });
+
   let config = {
     method: "post",
     maxBodyLength: Infinity,
-    url: process.env.AZURE_OPENAI_CHAT_COMPLETIONURL,
+    url: "https://openai-test-service.openai.azure.com/openai/deployments/gpt-35-turbo/chat/completions?api-version=2023-05-15",
     headers: {
-      "api-key": process.env.AZURE_OPENAI_API_KEY,
+      "api-key": "9c621621a0f64b7894fa9b4b421e1d29",
       "Content-Type": "application/json",
     },
-    data: finaldata,
+    data: data1,
   };
 
-  try {
-    const response = await axios.request(config);
-    console.log("Response....", response.data.choices[0]);
-    return response.data.choices[0].message.content;
-  } catch (error) {
-    console.log("Error", error);
-    return error;
-  }
+  await axios
+    .request(config)
+    .then((response) => {
+      console.log(response.data.choices[0].message.content);
+      return response.data.choices[0].message.content;
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 }
+module.exports.azureopenai = azureopenai;
+
+// ` You are helpful assistant.I have trascrition of audio file which is a conversation, The Trascription is
+//                          ${JSON.stringify(transcription)}.
+//                          Your task is to reply with a best suitable answer from the trascription for the  question.
+//                         Question: ${JSON.stringify(prompt)}
+//                          Note: You should be reply answer to the question from the audio trascription only.`;
