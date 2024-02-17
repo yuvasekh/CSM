@@ -6,6 +6,12 @@ export default {
   ],
   theme: {
     extend: {},
+    colors: {
+      "miracle-dr-blue": "#0d416b",
+      "miracle-blue": "#00aae7",
+      "miracle-black": "#232527",
+    },
+
   },
   plugins: [],
 }
