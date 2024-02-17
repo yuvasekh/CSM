@@ -1,14 +1,25 @@
+const express = require("express");
+const app = express();
+const http = require("http");
+const { Server } = require("socket.io");
+const cors = require("cors");
+app.use(cors());
 
-const express = require('express')
-const app = express()
-const port = 3000
-let apirouter = require("./routers/router");
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "*", methods: ["GET", "POST"] },
+});
 
-app.use("/api", apirouter);
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+io.on("connection", (socket) => {
+  console.log(`a user connected ${socket.id}`);
+  
+  socket.on("send_message", (data) => {
+    console.log(data,"data from client")
+    // socket.broadcast.emit("receive_message", data);
+    socket.emit("receive_message", data);
+  });
+  
+});
+server.listen(4000, () => {
+  console.log("listening on *:4000");
+});
