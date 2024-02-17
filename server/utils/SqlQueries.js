@@ -29,17 +29,86 @@ sql
   .catch((error) => {
     console.log(error, " connecting to DB");
   });
-  async function getlogin(projectId) {
-    try {
-      console.log("inside projects", projectId);
-      let selectQuery = `select * from ProjectFiles where ProjectId = '${projectId}' and Processed = 0`;
-      console.log("selectQuery", selectQuery);
-      // let pool = await sql.connect(config);
-      let dbResp = await pool.request().query(selectQuery);
-      // console.log("dbResp", dbResp.recordset);
-      return dbResp.recordset;
-    } catch (error) {
-      console.log("error", error);
-    }
+// async function getlogin(projectId) {
+//   try {
+//     console.log("inside projects", projectId);
+//     let selectQuery = `select * from ProjectFiles where ProjectId = '${projectId}' and Processed = 0`;
+//     console.log("selectQuery", selectQuery);
+//     // let pool = await sql.connect(config);
+//     let dbResp = await pool.request().query(selectQuery);
+//     // console.log("dbResp", dbResp.recordset);
+//     return dbResp.recordset;
+//   } catch (error) {
+//     console.log("error", error);
+//   }
+// }
+async function insertDocument(
+  splitFileId,
+  mainPDFId,
+  originalname,
+  splitFileBlobName,
+  i,
+  projectId,
+  startPageNumber,
+  fileType
+) {
+  const query = `INSERT INTO dbo.PdfSplitFiles 
+  VALUES (@Id,@ProjectFileId,@SplitFileName,@FileRelativeURL,@ProjectId,@Processed,@Isprivate,@StartPageNumber,@MainFileName,@Type)`;
+  try {
+    // let pool = await sql.connect(config);
+    let response = await pool
+      .request()
+      .input("Id", splitFileId)
+      .input("ProjectFileId", mainPDFId)
+      .input("SplitFileName", i + 1 + "_" + originalname)
+      .input("FileRelativeURL", splitFileBlobName)
+      .input("ProjectId", projectId)
+      .input("Processed", 0)
+      .input("Isprivate", 0)
+      .input("StartPageNumber", startPageNumber)
+      .input("MainFileName", originalname)
+      .input("Type", fileType)
+
+      .query(query);
+    // console.log("Inserted PDF Split file to DB")
+    return response;
+  } catch (error) {
+    console.log(error);
   }
-  export default getlogin
+}
+async function insertDocumentQuestions(
+  splitFileId,
+  mainPDFId,
+  originalname,
+  splitFileBlobName,
+  i,
+  projectId,
+  startPageNumber,
+  fileType
+) {
+  const query = `INSERT INTO dbo.PdfSplitFiles 
+  VALUES (@Id,@ProjectFileId,@SplitFileName,@FileRelativeURL,@ProjectId,@Processed,@Isprivate,@StartPageNumber,@MainFileName,@Type)`;
+  try {
+    // let pool = await sql.connect(config);
+    let response = await pool
+      .request()
+      .input("Id", splitFileId)
+      .input("ProjectFileId", mainPDFId)
+      .input("SplitFileName", i + 1 + "_" + originalname)
+      .input("FileRelativeURL", splitFileBlobName)
+      .input("ProjectId", projectId)
+      .input("Processed", 0)
+      .input("Isprivate", 0)
+      .input("StartPageNumber", startPageNumber)
+      .input("MainFileName", originalname)
+      .input("Type", fileType)
+
+      .query(query);
+    // console.log("Inserted PDF Split file to DB")
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+}
+module.exports.insertDocument = insertDocument;
+module.exports.insertDocumentQuestions = insertDocumentQuestions;
