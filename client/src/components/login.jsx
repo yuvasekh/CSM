@@ -88,7 +88,7 @@ const Login = () => {
           } else {
             setLoading(false);
             message.error("Invalid credentials.");
-            redirect("/login");
+            redirect("/home");
           }
         })
         .catch((e) => {
@@ -97,7 +97,7 @@ const Login = () => {
         });
     } else {
       message.error("Usename or Password cannot be empty.");
-      redirect("/login");
+      redirect("/home");
       setLoading(false);
     }
   };
