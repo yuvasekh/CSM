@@ -1,117 +1,92 @@
-"use client"
+import React, { useEffect, useState } from "react";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import io from "socket.io-client";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { ScrollArea } from "../components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Mic, MicOff, Video, VideoOff, Volume2, VolumeX, MessageSquare, User } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Badge } from "../components/ui/badge";
+import { Separator } from "../components/ui/separator";
+import { Progress } from "../components/ui/progress";
 
-import React, { useEffect, useState, useRef } from "react"
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition"
-import io from "socket.io-client"
-import ReactPlayer from "react-player"
-import { Button } from "../components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card"
-import { ScrollArea } from "../components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { Mic, MicOff, Video, VideoOff, Volume2, VolumeX, MessageSquare, User } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
-import { Badge } from "../components/ui/badge"
-import { Separator } from "../components/ui/separator"
-import { Progress } from "../components/ui/progress"
-import Speech, { HighlightedText, useSpeech } from "react-text-to-speech";
-
-const socket = io.connect("http://localhost:4000")
+const socket = io.connect("http://localhost:4000");
 
 export default function Home() {
-  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition()
-  const [stream, setStream] = useState(null)
-  const [botResponse, setBotResponse] = useState("")
-  const [lastTranscriptUpdateTime, setLastTranscriptUpdateTime] = useState(Date.now())
-  const [isVideoOn, setIsVideoOn] = useState(true)
-  const [isAudioOn, setIsAudioOn] = useState(true)
-  const [activeTab, setActiveTab] = useState("video")
-  const [progress, setProgress] = useState(0)
+  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+  const [botResponse, setBotResponse] = useState("");
+  const [lastTranscriptUpdateTime, setLastTranscriptUpdateTime] = useState(Date.now());
+  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    // Emit the message after a 2-second delay
     const transcriptUpdateTimeout = setTimeout(() => {
       if (Date.now() - lastTranscriptUpdateTime >= 2000) {
-        socket.emit("send_message", { message: transcript })
+        socket.emit("send_message", { message: transcript });
       }
-    }, 2000)
+    }, 2000);
 
-    return () => clearTimeout(transcriptUpdateTimeout)
-  }, [transcript, lastTranscriptUpdateTime])
+    return () => clearTimeout(transcriptUpdateTimeout);
+  }, [transcript, lastTranscriptUpdateTime]);
 
   useEffect(() => {
-    if (isVideoOn) {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-        setStream(stream)
-      })
-    } else {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop())
-        setStream(null)
-      }
-    }
-  }, [isVideoOn])
-
-  useEffect(() => {
+    // Listen for bot response and handle playback
     socket.on("receive_message", (data) => {
       if (data) {
-        setBotResponse(data)
-      
-          speakBotResponse(data)
-        
+        setBotResponse(data);
+        handleBotResponse(data);
       }
-      resetTranscript()
-    })
+      resetTranscript();
+    });
 
     return () => {
-      socket.off("receive_message")
-    }
-  }, [isAudioOn])
+      socket.off("receive_message");
+    };
+  }, []);
 
   useEffect(() => {
-    setLastTranscriptUpdateTime(Date.now())
-  }, [transcript])
+    setLastTranscriptUpdateTime(Date.now());
+  }, [transcript]);
 
+  // Progress animation for feedback
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress((oldProgress) => {
         if (oldProgress === 100) {
-          return 0
+          return 0;
         }
-        const diff = Math.random() * 10
-        return Math.min(oldProgress + diff, 100)
-      })
-    }, 500)
+        const diff = Math.random() * 10;
+        return Math.min(oldProgress + diff, 100);
+      });
+    }, 500);
 
     return () => {
-      clearInterval(timer)
-    }
-  }, [])
+      clearInterval(timer);
+    };
+  }, []);
 
-  const speakBotResponse = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text)
-    speechSynthesis.speak(utterance)
-  }
+  // Speak bot response while ensuring no echo
+  const handleBotResponse = (text) => {
+    SpeechRecognition.stopListening(); // Stop listening when playing the bot response
 
-  const startListening = () => SpeechRecognition.startListening({ continuous: true })
-  const stopListening = () => SpeechRecognition.stopListening()
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => {
+      if (isAudioOn) SpeechRecognition.startListening({ continuous: true }); // Resume listening after the response is spoken
+    };
 
-  const toggleVideo = () => setIsVideoOn(!isVideoOn)
-  const toggleAudio = () => setIsAudioOn(!isAudioOn)
+    speechSynthesis.speak(utterance);
+  };
+
+  const startListening = () => SpeechRecognition.startListening({ continuous: true });
+  const stopListening = () => SpeechRecognition.stopListening();
+
+  const toggleAudio = () => setIsAudioOn(!isAudioOn);
 
   if (!browserSupportsSpeechRecognition) {
-    return <span>Browser doesn't support speech recognition.</span>
-  }  useEffect(() => {
-    console.log(botResponse, "botresponsess");
-    if (botResponse) {
-      start();
-    }
-  }, [botResponse]);
-  const { Text, speechStatus, start, pause, stop } = useSpeech({
-    text: <div>{botResponse}</div>,
-    highlightText: true,
-    highlightProps: {
-      style: { color: "black", backgroundColor: "cement", fontSize: "20px" },
-    },
-  });
+    return <span>Browser doesn't support speech recognition.</span>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 flex flex-col items-center p-8">
@@ -120,30 +95,12 @@ export default function Home() {
           <CardTitle className="text-3xl font-bold text-center">AI CSM Assistant</CardTitle>
           <CardDescription className="text-center text-primary-foreground/80">Your personal AI-powered CSM coach</CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <CardContent className="p-6 h-[10]">
+          <Tabs value={"transcript"} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="video">Video</TabsTrigger>
               <TabsTrigger value="transcript">Transcript</TabsTrigger>
             </TabsList>
-            <TabsContent value="video" className="mt-4">
-              <div className="w-full bg-black rounded-lg overflow-hidden shadow-inner">
-                {isVideoOn ? (
-                  <ReactPlayer
-                    url={stream}
-                    playing={true}
-                    muted={true}
-                    width="100%"
-                    height="auto"
-                    className="rounded-lg"
-                  />
-                ) : (
-                  <div className="w-full h-64 flex items-center justify-center text-white text-2xl bg-gray-800">
-                    Video is off
-                  </div>
-                )}
-              </div>
-            </TabsContent>
             <TabsContent value="transcript" className="mt-4">
               <ScrollArea className="h-64 w-full rounded-md border p-4">
                 <p className="text-gray-700">{transcript}</p>
@@ -160,13 +117,6 @@ export default function Home() {
         >
           {listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           {listening ? 'Stop Listening' : 'Start Listening'}
-        </Button>
-        <Button
-          onClick={toggleVideo}
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg shadow-md transition-all flex items-center gap-2"
-        >
-          {isVideoOn ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-          {isVideoOn ? 'Turn Off Video' : 'Turn On Video'}
         </Button>
         <Button
           onClick={toggleAudio}
@@ -213,5 +163,5 @@ export default function Home() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

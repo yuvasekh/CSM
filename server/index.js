@@ -17,8 +17,9 @@ io.on("connection",async (socket) => {
 
   socket.on("send_message", async(data) => {
     console.log(data, "data from clienttt");
-    if(data!="" || data)
+    if(data.message!="" || data.message!="" )
     {
+      console.log("Inisde call")
       var reply=  await botreply(data.message).then((res)=>
       {
         console.log(res,"checl")
@@ -28,7 +29,7 @@ io.on("connection",async (socket) => {
   
     }
     else{
-      socket.emit("receive_message", res);
+      // socket.emit("receive_message", res);
      }
   
     // socket.broadcast.emit("receive_message", data);
