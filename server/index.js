@@ -22,8 +22,8 @@ io.on("connection",async (socket) => {
       console.log("Inisde call")
       var reply=  await botreply(data.message).then((res)=>
       {
-        console.log(res,"checl")
-        console.log(reply,'reply')
+        // console.log(res,"checl")
+        // console.log(reply,'reply')
         socket.emit("receive_message", res);
       })
   
