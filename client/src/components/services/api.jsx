@@ -10,4 +10,11 @@ export async function fileUpload(file, id) {
       formData
     );
   }
-  
+  export async function lipsync(content) {
+
+    console.log(content)
+    return await axios.post(
+      "http://localhost:4000/lipsync",
+      content
+    );
+  }
