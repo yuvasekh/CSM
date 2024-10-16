@@ -62,6 +62,7 @@ async function lipsync(content) {
       input_face: "https://storage.googleapis.com/dara-c1b52.appspot.com/daras_ai/media/4a63cb18-7945-11ef-bf5c-02420a00010b/csm2.jpg",
       elevenlabs_api_key: null,
     };
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
     const response = await fetch("https://api.gooey.ai/v2/LipsyncTTS", {
       method: "POST",
       headers: {
@@ -95,6 +96,7 @@ io.on("connection", async (socket) => {
       console.log("Inside call");
 
       try {
+        
         var reply = await botreply(data.message);
         console.log(reply, "bot reply");
 

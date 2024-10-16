@@ -89,7 +89,7 @@ export default function Home() {
       }
     }
 
-    speechSynthesis.speak(utterance)
+    // speechSynthesis.speak(utterance)
   }
 
   const startListening = async () => {
@@ -211,7 +211,7 @@ setInputFace("https://storage.googleapis.com/dara-c1b52.appspot.com/daras_ai/med
       />
     )}
     {videoUrl && (
-      <div>
+      <div className="h-[380px] w-[660px]">
         <video
           ref={videoRef}
           autoPlay
@@ -229,7 +229,6 @@ setInputFace("https://storage.googleapis.com/dara-c1b52.appspot.com/daras_ai/med
     )}
   </div>
 </TabsContent>
-
             <TabsContent value="transcript" className="mt-4">
               <ScrollArea className="h-64 w-full rounded-md border p-4">
                 <p className="text-gray-700">{transcript}</p>
