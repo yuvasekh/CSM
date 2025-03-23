@@ -11,6 +11,6 @@ const upload = multer();
 router.use(upload.any(), jsonParser, (req, res, next) => {
   return next();
 });
-require("./login.router")(router);
+// require("./login.router")(router);
 
 module.exports = router;

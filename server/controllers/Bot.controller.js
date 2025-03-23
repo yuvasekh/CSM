@@ -55,7 +55,7 @@ module.exports.botreply = async (content) => {
       {
         "question_id": 1,
         "question": "How can I reset my password?",
-        "answer": "To reset your password, go to the login page of yuva.com and click on 'Forgot Password.' You'll receive a password reset link via email.",
+        "answer": "To reset your password, go to the login page of AICSMQUERIES.com and click on 'Forgot Password.' You'll receive a password reset link via email.",
         "category": "Account Management",
         "priority": "High"
       },
@@ -123,46 +123,63 @@ module.exports.botreply = async (content) => {
         "priority": "Medium"
       }
     ]
-    
+
 
     return new Promise(async (resolve, reject) => {
       try {
-        const data = JSON.stringify({
-          "messages": [
-            {
-              "role": "system",
-              "content": `You are a virtual Customer Success Manager (CSM) .Please provide the appropriate reply to the user given Question or answer by taking reference of this Information :Infromation \n j${JSON.stringify(csmQuestions)}
-                if it is a greeting greet the user Note :The answer should be straight forward
-                `
-            },
-            {
-              "role": "user",
-              "content": `Here the user Question ${content}`
-            }
-          ]
-        });
 
-        const config = {
+        let data = JSON.stringify(
+          {
+            "contents": [
+              {
+                "role": "user",
+                "parts": [
+                  {
+                    "text": `Here the user Question ${content}`
+                  }
+                ]
+              }
+            ],
+            "systemInstruction": {
+              "role": "user",
+              "parts": [
+                {
+
+                  "text": `You are a virtual Customer Success Manager (CSM) .Please provide the appropriate reply to the user given Question or answer by taking reference of this Information :Infromation \n j${JSON.stringify(csmQuestions)}
+                if it is a greeting greet the user Note :The answer should be straight forward`
+                }
+              ]
+            },
+            "generationConfig": {
+              "temperature": 1,
+              "topK": 40,
+              "topP": 0.95,
+              "maxOutputTokens": 8192,
+              "responseMimeType": "application/json"
+            }
+          });
+
+        let config = {
           method: 'post',
           maxBodyLength: Infinity,
-          url: 'https://openai-test-service.openai.azure.com/openai/deployments/gpt-35-turbo/chat/completions?api-version=2023-05-15',
+          url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyC_yBhja8pLtvI887aE2z32JjA35w4J2Vo',
           headers: {
-            'api-key': '9c621621a0f64b7894fa9b4b421e1d29',
             'Content-Type': 'application/json'
           },
           data: data
         };
         // console.log(data)
-        await axios.request(config)
+
+        axios.request(config)
           .then((response) => {
-            const send = response.data.choices[0].message.content;
-            console.log(send, "bot");
-            resolve(send);
+            console.log(JSON.stringify(response.data));
+            resolve(response.data?.candidates[0]?.content.parts[0]?.text)
           })
           .catch((error) => {
             console.log(error);
-            reject(error);
+            reject(error)
           });
+
       } catch (error) {
         reject(error);
       }
